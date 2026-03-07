@@ -21,4 +21,6 @@ urlpatterns = [
     # Admin-only purchase APIs
     path('admin/purchases/', views.admin_list_purchases, name='admin-purchases'),
     path('admin/stats/', views.admin_dashboard_stats, name='admin-stats'),
+    #LLM Search Bar
+    path('llm-search/', views.llm_search, name='llm-search'),
 ]

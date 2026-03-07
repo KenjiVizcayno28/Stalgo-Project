@@ -17,6 +17,8 @@ import pyotp
 import qrcode
 import io
 import base64
+import google.generativeai as genai
+from django.conf import settings
 
 # Create your views here.
 @api_view(['GET'])
@@ -420,3 +422,36 @@ def getRoutes(request):
         '/api/products/update/<id>/',
     ]
     return Response(routes)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def llm_search(request):
+    query = request.data.get('query', '').strip()
+    if not query:
+        return Response({'ids': []})
+
+    catalog = "\n".join([f"ID {p['_id']}: {p['name']} - {p['description']}" for p in products])
+
+    prompt = (
+        f"You are a game search assistant for a game top-up store. "
+        f"Given the user's search query, return ONLY a JSON array of matching product IDs (as strings) from the catalog below. "
+        f"Return an empty array [] if nothing matches. Do not explain, just return the array.\n\n"
+        f"Catalog:\n{catalog}\n\n"
+        f"Query: \"{query}\"\n\n"
+        f"Response (JSON array only):"
+    )
+
+    try:
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        import json
+        ids = json.loads(text.strip())
+        return Response({'ids': ids})
+    except Exception as e:
+        return Response({'ids': [], 'error': str(e)}, status=500)

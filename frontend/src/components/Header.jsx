@@ -11,6 +11,7 @@ function Header() {
     const [search, setSearch] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [isLlmLoading, setIsLlmLoading] = useState(false);
     const searchRef = useRef();
     // Search logic: filter products by name (case-insensitive, partial match)
     useEffect(() => {
@@ -92,6 +93,23 @@ function Header() {
     }
   }
 
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault();
+    if (search.trim().length === 0) return;
+    setIsLlmLoading(true);
+    setShowDropdown(false);
+    try {
+      const response = await axios.post('http://localhost:8000/api/llm-search/', { query: search });
+      const ids = response.data.ids || [];
+      // Navigate to home with search results
+      navigate(`/?search=${encodeURIComponent(search)}&ids=${ids.join(',')}`);
+    } catch (err) {
+      console.error('LLM search error:', err);
+    } finally {
+      setIsLlmLoading(false);
+    }
+  };
+
   return (
     <Navbar expand="lg" bg="primary" variant="dark" collapseOnSelect>
       <Container>
@@ -107,9 +125,9 @@ function Header() {
           />
           <span>TheLootStop</span>
         </Navbar.Brand>
-        {/* SEARCH BAR, LLM TO BE IMPLEMENTED */}
+        {/* LLM BEING IMPLEMENTED, TESTING */}
         <div ref={searchRef} style={{ minWidth: 220, marginRight: 16, position: 'relative' }}>
-          <Form className="d-flex" onSubmit={e => e.preventDefault()} autoComplete="off">
+          <Form className="d-flex" onSubmit={handleSearchSubmit} autoComplete="off">
             <FormControl
               type="search"
               placeholder="Search products..."
@@ -120,8 +138,11 @@ function Header() {
               style={{ minWidth: 180 }}
             />
           </Form>
-          {showDropdown && (
+          {(showDropdown || isLlmLoading) && (
             <ListGroup style={{ position: 'absolute', zIndex: 1000, width: '100%', maxHeight: 250, overflowY: 'auto' }}>
+              {isLlmLoading && (
+                <ListGroup.Item disabled>🔍 Searching with AI...</ListGroup.Item>
+              )}
               {searchResults.map(product => (
                 <ListGroup.Item
                   key={product._id}

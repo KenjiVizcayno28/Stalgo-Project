@@ -3,10 +3,19 @@ import defaultProducts from '../products'
 import {Row, Col} from 'react-bootstrap'
 import Product from '../components/Product'
 import axios from 'axios'
+import { useSearchParams } from 'react-router-dom'
 
 function HomeScreen() {
+    const [searchParams] = useSearchParams();
+    const searchQuery = searchParams.get('search');
+    const searchIds = searchParams.get('ids')?.split(',').filter(Boolean) || [];
+
     const [products, setProducts] = useState(defaultProducts)
     const [loading, setLoading] = useState(true)
+    
+    const displayProducts = searchIds.length > 0 
+        ? products.filter(p => searchIds.includes(p._id))
+        : products;
 
     useEffect(() => {
         async function fetchProducts() {
@@ -28,8 +37,11 @@ function HomeScreen() {
 
   return (
     <div>
-        <h3 className='py-3 text-center'><i className='fas fa-fire'></i>Hottest<i className='fas fa-fire'></i></h3>
-        
+        {searchQuery ? (
+            <h3 className='py-3 text-center'>🔍 Search results for "{searchQuery}"</h3>
+        ) : (
+            <h3 className='py-3 text-center'><i className='fas fa-fire'></i>Hottest<i className='fas fa-fire'></i></h3>
+        )}        
         {loading ? (
             <div className="text-center py-5">
                 <p>Loading products...</p>
@@ -37,7 +49,7 @@ function HomeScreen() {
         ) : (
             <Row>
                 {products && products.length > 0 ? (
-                    products.map((product) => (
+                    displayProducts.map((product) => (
                         <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
                             <Product product={product}/>
                         </Col>
