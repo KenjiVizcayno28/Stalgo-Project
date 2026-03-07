@@ -78,3 +78,27 @@ class Purchase(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.product_name} (${self.price})"
+    
+class SearchHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='searches')
+    query = models.CharField(max_length=255)
+    matched_product_ids = models.JSONField(default=list, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.user.username} searched '{self.query}'"
+
+class ProductClick(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_clicks')
+    product_id = models.CharField(max_length=50)
+    product_name = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.user.username} clicked {self.product_name}"

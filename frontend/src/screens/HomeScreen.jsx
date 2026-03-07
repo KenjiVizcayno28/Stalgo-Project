@@ -12,6 +12,8 @@ function HomeScreen() {
 
     const [products, setProducts] = useState(defaultProducts)
     const [loading, setLoading] = useState(true)
+    const [recommendations, setRecommendations] = useState([])
+    const [loadingRecs, setLoadingRecs] = useState(true)
     
     const displayProducts = searchIds.length > 0 
         ? products.filter(p => searchIds.includes(p._id))
@@ -33,6 +35,28 @@ function HomeScreen() {
             }
         }
         fetchProducts()
+    }, [])
+
+    useEffect(() => {
+        async function fetchRecommendations() {
+            try {
+                setLoadingRecs(true)
+                const token = localStorage.getItem('authToken')
+                const config = token ? {
+                    headers: { Authorization: `Token ${token}` }
+                } : {}
+                
+                const {data} = await axios.get('http://localhost:8000/api/recommendations/', config)
+                if (data && data.products) {
+                    setRecommendations(data.products)
+                }
+            } catch (err) {
+                console.error('Error fetching recommendations:', err)
+            } finally {
+                setLoadingRecs(false)
+            }
+        }
+        fetchRecommendations()
     }, [])
 
   return (
@@ -62,9 +86,27 @@ function HomeScreen() {
             </Row>
         )}
     
-                {/* RECOMMENDATIONS SECTION, AI PART TO BE IMPLEMENTED */}
-            <h3 className='py-3 text-center'><i className='fas fa-thumbs-up'></i> Recommendations For You <i className='fas fa-thumbs-up'></i></h3>
-            <div className="text-center py-4 text-muted">AI part to be implemented</div>
+        {/* AI-POWERED RECOMMENDATIONS SECTION */}
+        <h3 className='py-3 text-center'><i className='fas fa-thumbs-up'></i> Recommendations For You <i className='fas fa-thumbs-up'></i></h3>
+        {loadingRecs ? (
+            <div className="text-center py-4 text-muted">
+                <p>Loading recommendations...</p>
+            </div>
+        ) : (
+            <Row>
+                {recommendations && recommendations.length > 0 ? (
+                    recommendations.map((product) => (
+                        <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
+                            <Product product={product}/>
+                        </Col>
+                    ))
+                ) : (
+                    <Col className="text-center w-100">
+                        <p className="text-muted">No recommendations available</p>
+                    </Col>
+                )}
+            </Row>
+        )}
     </div>
   )
 }

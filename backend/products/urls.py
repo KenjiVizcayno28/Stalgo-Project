@@ -23,4 +23,7 @@ urlpatterns = [
     path('admin/stats/', views.admin_dashboard_stats, name='admin-stats'),
     #LLM Search Bar
     path('llm-search/', views.llm_search, name='llm-search'),
+    # AI Recommendations
+    path('recommendations/', views.get_recommendations, name='recommendations'),
+    path('track-click/', views.track_product_click, name='track-click'),
 ]

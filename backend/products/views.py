@@ -12,7 +12,9 @@ from django.contrib.auth.models import User
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer, UserProfileSerializer
 from .models import UserProfile
 from .models import Purchase
+from .models import ProductClick
 from .serializers import PurchaseSerializer
+from .recommendations import get_ai_recommendations, get_fallback_recommendations
 import pyotp
 import qrcode
 import io
@@ -433,14 +435,17 @@ def llm_search(request):
     catalog = "\n".join([f"ID {p['_id']}: {p['name']} - {p['description']}" for p in products])
 
     prompt = (
-        f"You are a game search assistant for a game top-up store. "
-        f"Given the user's search query, return ONLY a JSON array of matching product IDs (as strings) from the catalog below. "
+        f"You are an intelligent game search assistant for a gaming top-up store. "
+        f"Understand the user's search intent and match it with relevant products based on genre, gameplay, or themes. "
+        f"For example: 'gacha' should match gacha games like Genshin Impact and Honkai, "
+        f"'shooter' should match FPS/TPS games like Call of Duty, PUBG, Valorant. "
+        f"Return ONLY a JSON array of matching product IDs (as strings). "
         f"Return an empty array [] if nothing matches. Do not explain, just return the array.\n\n"
         f"Catalog:\n{catalog}\n\n"
-        f"Query: \"{query}\"\n\n"
+        f"User Search Query: \"{query}\"\n\n"
         f"Response (JSON array only):"
     )
-
+    
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
         model = genai.GenerativeModel('gemini-2.5-flash')
@@ -451,7 +456,61 @@ def llm_search(request):
             if text.startswith("json"):
                 text = text[4:]
         import json
-        ids = json.loads(text.strip())
-        return Response({'ids': ids})
+        matched_ids = json.loads(text.strip())
+        return Response({'ids': matched_ids})
     except Exception as e:
+        print(f"LLM Search Error: {e}")
         return Response({'ids': [], 'error': str(e)}, status=500)
+    
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_recommendations(request):
+    try:
+        if request.user.is_authenticated:
+            recommended_ids = get_ai_recommendations(request.user, products, limit=4)
+        else:
+            recommended_ids = get_fallback_recommendations(products, limit=4)
+        
+        recommended_products = [p for p in products if p['_id'] in recommended_ids]
+        
+        return Response({
+            'products': recommended_products,
+            'count': len(recommended_products)
+        }, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        fallback_ids = get_fallback_recommendations(products, limit=4)
+        fallback_products = [p for p in products if p['_id'] in fallback_ids]
+        
+        return Response({
+            'products': fallback_products,
+            'count': len(fallback_products),
+            'error': str(e)
+        }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def track_product_click(request):
+    try:
+        product_id = request.data.get('product_id')
+        product_name = request.data.get('product_name')
+        
+        if not product_id or not product_name:
+            return Response({
+                'error': 'product_id and product_name are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        ProductClick.objects.create(
+            user=request.user,
+            product_id=product_id,
+            product_name=product_name
+        )
+        
+        return Response({
+            'message': 'Product click tracked successfully'
+        }, status=status.HTTP_201_CREATED)
+    
+    except Exception as e:
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
