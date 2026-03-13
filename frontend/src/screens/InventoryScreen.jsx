@@ -18,14 +18,32 @@ const TYPE_LABELS = [
   { key: 'bundle', label: 'Bundles' },
 ]
 
+const normalizeType = (item) => {
+  const rawType = (item?.type || item?.purchase_type || '').toString().trim().toLowerCase()
+  if (rawType === 'skin' || rawType === 'skins') return 'skin'
+  if (rawType === 'bundle' || rawType === 'bundles') return 'bundle'
+  if (rawType === 'coin' || rawType === 'coins') return 'coin'
+
+  const name = (item?.name || item?.product_name || '').toString().toLowerCase()
+  if (name.includes('bundle')) return 'bundle'
+  return item?.coins ? 'coin' : 'skin'
+}
+
+const normalizeInventoryItem = (item) => ({
+  ...item,
+  name: item?.name || item?.product_name || 'Item',
+  game: item?.game || 'General',
+  type: normalizeType(item),
+})
+
 function InventoryScreen() {
-  const [inventory, setInventory] = useState(() => JSON.parse(localStorage.getItem('inventory') || '[]'))
+  const [inventory, setInventory] = useState(() => JSON.parse(localStorage.getItem('inventory') || '[]').map(normalizeInventoryItem))
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('authToken'))
   const [filterType, setFilterType] = useState('all')
   const [filterGame, setFilterGame] = useState('all')
 
   useEffect(() => {
-    const handler = () => setInventory(JSON.parse(localStorage.getItem('inventory') || '[]'))
+    const handler = () => setInventory(JSON.parse(localStorage.getItem('inventory') || '[]').map(normalizeInventoryItem))
     window.addEventListener('storage', handler)
     return () => window.removeEventListener('storage', handler)
   }, [])
@@ -64,9 +82,9 @@ function InventoryScreen() {
           game: p.game,
           type: p.type,
           coins: p.coins
-        }));
+        })).map(normalizeInventoryItem);
         // Merge backend purchases with local inventory, avoiding duplicates
-        const existing = JSON.parse(localStorage.getItem('inventory') || '[]');
+        const existing = JSON.parse(localStorage.getItem('inventory') || '[]').map(normalizeInventoryItem);
         const backendIds = new Set(mapped.map(p => p.id));
         const merged = [...mapped, ...existing.filter(p => !backendIds.has(p.id))];
         setInventory(merged);
@@ -89,7 +107,7 @@ function InventoryScreen() {
 
   const filtered = useMemo(() => {
     return inventory.filter(it => {
-      if (filterType !== 'all' && (it.type || 'coin') !== filterType) return false
+      if (filterType !== 'all' && normalizeType(it) !== filterType) return false
       if (filterGame !== 'all' && (it.game || 'General') !== filterGame) return false
       return true
     })

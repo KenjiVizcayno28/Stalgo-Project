@@ -2,6 +2,30 @@ from django.db import models
 from django.contrib.auth.models import User
 import pyotp
 
+
+class Product(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    unit = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)
+    unit_design_image = models.ImageField(upload_to='unit_designs/', blank=True, null=True)
+    unit_design_image_url = models.URLField(blank=True, null=True)
+    unit_design_emoji = models.CharField(max_length=16, blank=True, null=True)
+    unit_design_color = models.CharField(max_length=20, default='#28a745')
+    unit_design_border_color = models.CharField(max_length=20, default='#1e7e34')
+    in_stock = models.BooleanField(default=True)
+    category = models.CharField(max_length=100, default='Game Top-Up')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 class UserProfile(models.Model):
     """Extended user profile model"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -62,6 +86,10 @@ class Purchase(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='purchases')
     product_name = models.CharField(max_length=255)
     product_id = models.CharField(max_length=50, blank=True, null=True)
+    purchase_type = models.CharField(max_length=20, blank=True, null=True)
+    game = models.CharField(max_length=100, blank=True, null=True)
+    coins = models.PositiveIntegerField(blank=True, null=True)
+    cost_coins = models.PositiveIntegerField(blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
     unit = models.CharField(max_length=50, blank=True, default='unit')
     price = models.DecimalField(max_digits=10, decimal_places=2)

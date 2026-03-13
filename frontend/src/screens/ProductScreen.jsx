@@ -1,5 +1,4 @@
 import React, {useEffect, useState, useMemo} from 'react'
-import defaultProducts from '../products'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Col, ListGroup, Row, Image, Card, Button, Form } from 'react-bootstrap';
 // Rating removed per request
@@ -103,14 +102,6 @@ function ProductScreen() {
     }, [product.unit, product.unitDesign])
 
     useEffect(() => {
-        // First try to get from local products (faster)
-        const localProduct = defaultProducts.find(p => p._id === id)
-        if (localProduct) {
-            setProduct(localProduct)
-            return
-        }
-        
-        // If not found locally, try to fetch from backend
         async function fetchProduct() {
             try {
                 const {data} = await axios.get(`http://localhost:8000/api/products/${id}/`)

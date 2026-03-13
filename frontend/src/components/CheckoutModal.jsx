@@ -22,6 +22,9 @@ const CheckoutModal = ({ show, onHide, product, chosenProduct, userId }) => {
     const payload = {
       product_name: product?.name || chosenProduct?.name || 'Item',
       product_id: chosenProduct?._id || chosenProduct?.id || null,
+      game: product?.name || 'General',
+      type: chosenProduct?.type || 'coin',
+      coins: chosenProduct?.amount || null,
       quantity: quantity,
       unit: chosenProduct?.unit || 'unit',
       price: chosenProduct?.price || 0,
@@ -46,6 +49,9 @@ const CheckoutModal = ({ show, onHide, product, chosenProduct, userId }) => {
           const mapped = {
             id: data.transaction_id || data.id,
             name: data.product_name,
+            game: data.game || product?.name || 'General',
+            type: data.type || chosenProduct?.type || 'coin',
+            coins: data.coins || chosenProduct?.amount || null,
             quantity: data.quantity,
             price: data.price,
             status: data.status,

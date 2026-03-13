@@ -1,19 +1,16 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .products import products
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer, UserProfileSerializer
-from .models import UserProfile
-from .models import Purchase
-from .models import ProductClick
-from .serializers import PurchaseSerializer
+from django.db.models import Q
+from .serializers import ProductSerializer, PurchaseSerializer, UserLoginSerializer, UserProfileSerializer, UserRegistrationSerializer, UserSerializer
+from .models import Product, ProductClick, Purchase, UserProfile
 from .recommendations import get_ai_recommendations, get_fallback_recommendations
 import pyotp
 import qrcode
@@ -22,11 +19,109 @@ import base64
 import google.generativeai as genai
 from django.conf import settings
 
+def _get_catalog_queryset():
+    return Product.objects.all().order_by('name')
+
+
+def _get_catalog_payload(request=None):
+    context = {'request': request} if request else {}
+    return ProductSerializer(_get_catalog_queryset(), many=True, context=context).data
+
+
+def _get_hottest_products(limit=4):
+    products = list(_get_catalog_queryset())
+    if not products:
+        return []
+
+    products_by_id = {str(product.pk): product for product in products}
+    products_by_name = {product.name.strip().lower(): product for product in products}
+    purchase_counts = {product.pk: 0 for product in products}
+
+    completed_purchases = Purchase.objects.exclude(
+        Q(status__iexact='pending') | Q(status__iexact='failed') | Q(status__iexact='refunded')
+    )
+
+    for purchase in completed_purchases.iterator():
+        matched_product = None
+        if purchase.product_id:
+            matched_product = products_by_id.get(str(purchase.product_id).strip())
+
+        if matched_product is None and purchase.product_name:
+            matched_product = products_by_name.get(purchase.product_name.strip().lower())
+
+        if matched_product is not None:
+            purchase_counts[matched_product.pk] += 1
+
+    return sorted(products, key=lambda product: (-purchase_counts[product.pk], product.name.lower()))[:limit]
+
+
+def _get_hottest_catalog_payload(request=None, limit=4):
+    context = {'request': request} if request else {}
+    hottest_products = _get_hottest_products(limit=limit)
+    return ProductSerializer(hottest_products, many=True, context=context).data
+
+
+def _forbidden_if_not_admin(request):
+    if not request.user.is_superuser:
+        return Response({'detail': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    return None
+
+
 # Create your views here.
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def getProducts(request):
-    return Response(products)
+    return Response(_get_catalog_payload(request))
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getHottestProducts(request):
+    return Response(_get_hottest_catalog_payload(request))
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_list_products(request):
+    forbidden = _forbidden_if_not_admin(request)
+    if forbidden:
+        return forbidden
+    return Response(_get_catalog_payload(request))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+def admin_create_product(request):
+    forbidden = _forbidden_if_not_admin(request)
+    if forbidden:
+        return forbidden
+
+    serializer = ProductSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        product = serializer.save()
+        return Response(ProductSerializer(product, context={'request': request}).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser, JSONParser])
+def admin_update_product(request, pk):
+    forbidden = _forbidden_if_not_admin(request)
+    if forbidden:
+        return forbidden
+
+    try:
+        product = Product.objects.get(pk=pk)
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ProductSerializer(product, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        product = serializer.save()
+        return Response(ProductSerializer(product, context={'request': request}).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -165,6 +260,10 @@ def create_purchase(request):
     try:
         product_name = data.get('product_name') or data.get('name')
         product_id = data.get('product_id')
+        purchase_type = data.get('type')
+        game = data.get('game')
+        coins = data.get('coins')
+        cost_coins = data.get('cost_coins')
         quantity = int(data.get('quantity', 1))
         unit = data.get('unit') or data.get('unit_name') or 'unit'
         price = float(data.get('price') or 0)
@@ -180,6 +279,10 @@ def create_purchase(request):
             user=request.user,
             product_name=product_name or 'Unknown Product',
             product_id=product_id,
+            purchase_type=purchase_type,
+            game=game,
+            coins=int(coins) if coins not in (None, '') else None,
+            cost_coins=int(cost_coins) if cost_coins not in (None, '') else None,
             quantity=quantity,
             unit=unit,
             price=price,
@@ -400,28 +503,20 @@ def test_2fa_code(request):
 
 @api_view(['GET'])
 def getProduct(request, pk):
-    product = None
-    for i in products:
-        if i['_id'] == pk:
-            product = i
-            break
-    return Response(product)
+    try:
+        product = Product.objects.get(pk=pk)
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    return Response(ProductSerializer(product, context={'request': request}).data)
 
 @api_view(['GET'])
 def getRoutes(request):
     routes = [
         '/api/products/',
-        '/api/products/create/',
-
-        '/api/products/upload/',
-
-        '/api/products/<id>/reviews/',
-
-        '/api/products/top/',
         '/api/products/<id>/',
-
-        '/api/products/delete/<id>/',
-        '/api/products/update/<id>/',
+        '/api/admin/products/',
+        '/api/admin/products/create/',
+        '/api/admin/products/<id>/update/',
     ]
     return Response(routes)
 
@@ -432,7 +527,11 @@ def llm_search(request):
     if not query:
         return Response({'ids': []})
 
-    catalog = "\n".join([f"ID {p['_id']}: {p['name']} - {p['description']}" for p in products])
+    catalog_products = _get_catalog_payload()
+    if not catalog_products:
+        return Response({'ids': []})
+
+    catalog = "\n".join([f"ID {p['_id']}: {p['name']} - {p['description']}" for p in catalog_products])
 
     prompt = (
         f"You are an intelligent game search assistant for a gaming top-up store. "
@@ -466,12 +565,16 @@ def llm_search(request):
 @permission_classes([AllowAny])
 def get_recommendations(request):
     try:
+        catalog_products = _get_catalog_payload(request)
+        if not catalog_products:
+            return Response({'products': [], 'count': 0}, status=status.HTTP_200_OK)
+
         if request.user.is_authenticated:
-            recommended_ids = get_ai_recommendations(request.user, products, limit=4)
+            recommended_ids = get_ai_recommendations(request.user, catalog_products, limit=4)
         else:
-            recommended_ids = get_fallback_recommendations(products, limit=4)
+            recommended_ids = get_fallback_recommendations(catalog_products, limit=4)
         
-        recommended_products = [p for p in products if p['_id'] in recommended_ids]
+        recommended_products = [p for p in catalog_products if p['_id'] in recommended_ids]
         
         return Response({
             'products': recommended_products,
@@ -479,8 +582,9 @@ def get_recommendations(request):
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
-        fallback_ids = get_fallback_recommendations(products, limit=4)
-        fallback_products = [p for p in products if p['_id'] in fallback_ids]
+        catalog_products = _get_catalog_payload(request)
+        fallback_ids = get_fallback_recommendations(catalog_products, limit=4)
+        fallback_products = [p for p in catalog_products if p['_id'] in fallback_ids]
         
         return Response({
             'products': fallback_products,

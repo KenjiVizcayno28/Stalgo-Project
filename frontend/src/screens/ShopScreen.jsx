@@ -58,7 +58,8 @@ function ShopScreen() {
           name: data.product_name,
           coins: data.coins,
           price: data.price,
-          type: 'coin',
+          type: data.type || 'coin',
+          game: data.game || 'General',
           status: data.status,
           date: data.created_at
         }]);
@@ -107,8 +108,8 @@ function ShopScreen() {
         setInventory((inv) => [...inv, {
           id: data.transaction_id || data.id,
           name: data.product_name,
-          game: data.game,
-          type: data.type,
+          game: data.game || 'General',
+          type: data.type || purchase.type,
           price: data.price,
           coins: data.coins,
           status: data.status,

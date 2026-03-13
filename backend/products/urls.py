@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.getRoutes, name='routes'),
     path('products/', views.getProducts, name='products'),
+    path('products/hottest/', views.getHottestProducts, name='hottest-products'),
     path('products/<str:pk>/', views.getProduct, name='product'),
     path('register/', views.register_user, name='register'),
     path('login/', views.login_user, name='login'),
@@ -21,6 +22,9 @@ urlpatterns = [
     # Admin-only purchase APIs
     path('admin/purchases/', views.admin_list_purchases, name='admin-purchases'),
     path('admin/stats/', views.admin_dashboard_stats, name='admin-stats'),
+    path('admin/products/', views.admin_list_products, name='admin-products'),
+    path('admin/products/create/', views.admin_create_product, name='admin-create-product'),
+    path('admin/products/<str:pk>/update/', views.admin_update_product, name='admin-update-product'),
     #LLM Search Bar
     path('llm-search/', views.llm_search, name='llm-search'),
     # AI Recommendations
