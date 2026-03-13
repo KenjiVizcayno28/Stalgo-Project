@@ -36,6 +36,8 @@ function TransactionHistory() {
         const mapped = data.map(p => ({
           id: p.transaction_id || p.id,
           name: p.product_name,
+          type: p.type || '',
+          unit: p.unit || '',
           quantity: p.quantity,
           price: p.price,
           status: p.status,
@@ -75,7 +77,16 @@ function TransactionHistory() {
   const exportCsv = () => {
     if (!transactions || transactions.length === 0) return
     const headers = ['transactionId','item','game','type','quantity','price','status','date']
-    const rows = transactions.map(t => ([t.id||'', t.name||'', t.game||'', t.type||'', t.quantity||t.coins||'', t.price!=null?t.price:'', t.status||'Completed', t.date||'']))
+    const rows = transactions.map(t => ([
+      t.id || '',
+      t.name || '',
+      t.game || '',
+      t.unit || t.type || '',
+      t.quantity || t.coins || '',
+      t.price != null ? t.price : '',
+      t.status || 'Completed',
+      t.date || '',
+    ]))
     const csv = [headers.join(','), ...rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','))].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -138,7 +149,7 @@ function TransactionHistory() {
                 <td style={{minWidth:120}}>{t.id || '—'}</td>
                 <td>{t.name || (t.coins ? `${t.coins.toLocaleString()} coins` : 'Item')}</td>
                 <td>{t.game ? t.game : 'General'}</td>
-                <td>{t.type ? t.type.charAt(0).toUpperCase() + t.type.slice(1) : 'Coin'}</td>
+                <td>{t.unit || (t.type ? t.type.charAt(0).toUpperCase() + t.type.slice(1) : 'Unit')}</td>
                 <td>{t.quantity || t.coins || 1}</td>
                 <td>{t.price != null ? `$${Number(t.price).toFixed(2)}` : '—'}</td>
                 <td>{t.status || 'Completed'}</td>

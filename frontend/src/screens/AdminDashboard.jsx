@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import {
+  Accordion,
   Alert,
   Badge,
   Button,
+  Modal,
   Card,
   Col,
   Container,
@@ -32,6 +34,8 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
   const [purchases, setPurchases] = useState([])
+  const [supportTickets, setSupportTickets] = useState([])
+  const [selectedTicket, setSelectedTicket] = useState(null)
   const [products, setProducts] = useState([])
   const [productForm, setProductForm] = useState(emptyProductForm)
   const [productImage, setProductImage] = useState(null)
@@ -51,6 +55,18 @@ function AdminDashboard() {
     setUnitDesignImage(null)
     setEditingProductId(null)
   }
+
+  const loadSupportTickets = useCallback(() => {
+    try {
+      const rawTickets = JSON.parse(localStorage.getItem('supportTickets') || '[]')
+      const normalizedTickets = Array.isArray(rawTickets) ? rawTickets : []
+      normalizedTickets.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+      setSupportTickets(normalizedTickets)
+    } catch (error) {
+      console.warn('Failed to load support tickets from localStorage', error)
+      setSupportTickets([])
+    }
+  }, [])
 
   const fetchData = useCallback(async () => {
     if (!token) {
@@ -79,6 +95,7 @@ function AdminDashboard() {
       setStats(statsRes.data)
       setPurchases(purchasesRes.data)
       setProducts(productsRes.data)
+      loadSupportTickets()
     } catch (error) {
       console.error('Admin fetch error', error)
 
@@ -101,11 +118,19 @@ function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [isAdmin, token])
+  }, [isAdmin, loadSupportTickets, token])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  useEffect(() => {
+    const handler = () => loadSupportTickets()
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [loadSupportTickets])
+
+  const openSupportTicketsCount = supportTickets.filter((ticket) => (ticket.status || 'open') === 'open').length
 
   const handleProductFormChange = (event) => {
     const { name, value, type, checked } = event.target
@@ -269,43 +294,108 @@ function AdminDashboard() {
             </Col>
           </Row>
 
-          <Card className="mb-3">
-            <Card.Header>Recent Purchases</Card.Header>
-            <Card.Body className="p-0">
-              <Table striped hover responsive className="mb-0">
-                <thead>
-                  <tr>
-                    <th>Txn ID</th>
-                    <th>User</th>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {purchases.length === 0 ? (
+          <Accordion className="mb-3" alwaysOpen={false}>
+            <Accordion.Item eventKey="recent-purchases">
+              <Accordion.Header>
+                <span className="d-flex align-items-center gap-2">
+                  <span>Recent Purchases</span>
+                  <Badge bg="secondary">{purchases.length}</Badge>
+                </span>
+              </Accordion.Header>
+              <Accordion.Body className="p-0">
+                <Table striped hover responsive className="mb-0">
+                  <thead>
                     <tr>
-                      <td colSpan={7} className="text-center py-3">No purchases yet</td>
+                      <th>Txn ID</th>
+                      <th>User</th>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Price</th>
+                      <th>Status</th>
+                      <th>When</th>
                     </tr>
-                  ) : (
-                    purchases.map((purchase) => (
-                      <tr key={purchase.id || purchase.transaction_id}>
-                        <td style={{ minWidth: 160 }}>{purchase.transaction_id || purchase.id}</td>
-                        <td>{purchase.user?.username || '-'}</td>
-                        <td>{purchase.product_name}</td>
-                        <td>{purchase.quantity}</td>
-                        <td>${Number(purchase.price || 0).toFixed(2)}</td>
-                        <td>{purchase.status}</td>
-                        <td>{new Date(purchase.created_at).toLocaleString()}</td>
+                  </thead>
+                  <tbody>
+                    {purchases.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-center py-3">No purchases yet</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
+                    ) : (
+                      purchases.map((purchase) => (
+                        <tr key={purchase.id || purchase.transaction_id}>
+                          <td style={{ minWidth: 160 }}>{purchase.transaction_id || purchase.id}</td>
+                          <td>{purchase.user?.username || '-'}</td>
+                          <td>{purchase.product_name}</td>
+                          <td>{purchase.quantity}</td>
+                          <td>${Number(purchase.price || 0).toFixed(2)}</td>
+                          <td>{purchase.status}</td>
+                          <td>{new Date(purchase.created_at).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+
+          <Accordion className="mb-3" alwaysOpen={false}>
+            <Accordion.Item eventKey="support-inbox">
+              <Accordion.Header>
+                <span className="d-flex align-items-center gap-2">
+                  <span>Support Inbox</span>
+                  <Badge bg={openSupportTicketsCount > 0 ? 'danger' : 'secondary'}>{supportTickets.length}</Badge>
+                </span>
+              </Accordion.Header>
+              <Accordion.Body className="p-0">
+                <Table striped hover responsive className="mb-0">
+                  <thead>
+                    <tr>
+                      <th>Ticket</th>
+                      <th>From</th>
+                      <th>Subject</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {supportTickets.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-3">No support tickets yet</td>
+                      </tr>
+                    ) : (
+                      supportTickets.map((ticket) => (
+                        <tr key={ticket.id || `${ticket.email}-${ticket.date}`}>
+                          <td style={{ minWidth: 140 }}>{ticket.id || '-'}</td>
+                          <td>
+                            <div>{ticket.name || '-'}</div>
+                            <small className="text-muted">{ticket.email || '-'}</small>
+                          </td>
+                          <td>{ticket.subject || 'No subject'}</td>
+                          <td>
+                            <Badge bg={(ticket.status || 'open') === 'open' ? 'warning' : 'success'} text={(ticket.status || 'open') === 'open' ? 'dark' : 'light'}>
+                              {(ticket.status || 'open').toString().toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td>{ticket.date ? new Date(ticket.date).toLocaleString() : '-'}</td>
+                          <td>
+                            <Button
+                              size="sm"
+                              variant="outline-primary"
+                              onClick={() => setSelectedTicket(ticket)}
+                            >
+                              Read
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
 
           <Row className="g-3">
             <Col lg={5}>
@@ -505,7 +595,38 @@ function AdminDashboard() {
           </Row>
         </>
       )}
+
+      <TicketDetailsModal ticket={selectedTicket} onHide={() => setSelectedTicket(null)} />
     </Container>
+  )
+}
+
+function TicketDetailsModal({ ticket, onHide }) {
+  return (
+    <Modal show={Boolean(ticket)} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>Support Ticket Details</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {!ticket ? null : (
+          <>
+            <p className="mb-1"><strong>Ticket ID:</strong> {ticket.id || '-'}</p>
+            <p className="mb-1"><strong>Name:</strong> {ticket.name || '-'}</p>
+            <p className="mb-1"><strong>Email:</strong> {ticket.email || '-'}</p>
+            <p className="mb-1"><strong>Subject:</strong> {ticket.subject || 'No subject'}</p>
+            <p className="mb-1"><strong>Status:</strong> {(ticket.status || 'open').toString().toUpperCase()}</p>
+            <p className="mb-3"><strong>Date:</strong> {ticket.date ? new Date(ticket.date).toLocaleString() : '-'}</p>
+            <div className="border rounded p-2 bg-light">
+              <strong>Message</strong>
+              <p className="mb-0 mt-1" style={{ whiteSpace: 'pre-wrap' }}>{ticket.message || 'No message content.'}</p>
+            </div>
+          </>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onHide}>Close</Button>
+      </Modal.Footer>
+    </Modal>
   )
 }
 

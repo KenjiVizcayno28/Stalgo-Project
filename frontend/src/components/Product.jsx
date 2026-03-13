@@ -46,11 +46,6 @@ function Product({product}) {
                   <Card.Text as='div'>
                         {/* Rating removed */}
                       <h5 className='my-2'>${product.price}</h5>
-                      {product.countInStock === 0 && (
-                        <p className='text-danger fw-bold mt-2'>
-                          <i className='fas fa-exclamation-circle me-1'></i>Out of Stock
-                        </p>
-                      )}
                   </Card.Text>
                   <Button 
                     variant={product.countInStock > 0 ? 'success' : 'secondary'} 

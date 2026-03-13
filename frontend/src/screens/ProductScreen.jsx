@@ -208,7 +208,7 @@ function ProductScreen() {
                             }}>
                               1
                             </span>
-                            <label className='mb-0 fw-bold' style={{ color: '#007bff' }}>Enter User ID</label>
+                            <label className='mb-0 fw-bold' style={{ color: '#007bff' }}>Enter User ID : Make sure that your User ID is correct</label>
                           </div>
                           <input 
                             type='text' 
