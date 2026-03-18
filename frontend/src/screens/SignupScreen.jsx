@@ -62,20 +62,35 @@ const SignupScreen = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const submitRegistration = () => axios.post('/api/register/', {
+    username: formData.username,
+    email: formData.email,
+    first_name: formData.first_name,
+    last_name: formData.last_name,
+    password: formData.password,
+    password2: formData.password2,
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/register/', {
-        username: formData.username,
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        password: formData.password,
-        password2: formData.password2,
-      });
+      let response;
+      try {
+        response = await submitRegistration();
+      } catch (firstError) {
+        // Render free tier can sleep; retry once after a short delay.
+        if (!firstError.response) {
+          await wait(3500);
+          response = await submitRegistration();
+        } else {
+          throw firstError;
+        }
+      }
 
       // Store token in localStorage
       localStorage.setItem('authToken', response.data.token);
@@ -118,6 +133,11 @@ const SignupScreen = () => {
         if (newErrors.detail || newErrors.non_field_errors) {
           setAlert({ type: 'danger', message: newErrors.detail || newErrors.non_field_errors });
         }
+      } else if (!error.response) {
+        setAlert({
+          type: 'danger',
+          message: 'Cannot reach server right now. If this is the first request, wait 20-60 seconds for Render to wake up, then try again.'
+        });
       } else {
         // If backend didn't return structured errors, show raw message if available
         const rawMessage = error.response?.data?.message || error.message || 'Registration failed. Please try again.';
