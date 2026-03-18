@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Container, Row, Col, Card, Badge, Button, Modal } from 'react-bootstrap'
+import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
+import CheckoutModal from '../components/CheckoutModal'
 
 const events = [
   {
@@ -50,8 +51,8 @@ const events = [
     promo: 'LIMITED TIME',
     bonus: 'Exclusive Badge',
     discount: '15% OFF',
-    price: null,
-    costCoins: 1500,
+    price: 4.99,
+    costCoins: null,
     color: '#ff4500',
     logo: 'Roblox.png'
   },
@@ -102,114 +103,32 @@ const events = [
     promo: 'LIMITED TIME',
     bonus: 'Cosmic Emote',
     discount: '15% OFF',
-    price: null,
-    costCoins: 800,
+    price: 3.99,
+    costCoins: null,
     color: '#2b9cff',
     logo: 'LID.jpg'
   }
 ]
 
 function EventsScreen() {
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [selected, setSelected] = useState(null)
-  const [result, setResult] = useState(null)
+  const [showCheckout, setShowCheckout] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
   const navigate = useNavigate()
 
-  const openConfirm = (ev) => {
-    const token = localStorage.getItem('authToken') || localStorage.getItem('user')
+  const openCheckout = (ev) => {
+    const token = localStorage.getItem('authToken')
     if (!token) {
       navigate('/login')
       return
     }
-    setSelected(ev); setShowConfirm(true); setResult(null)
+    setSelectedEvent(ev)
+    setShowCheckout(true)
   }
 
-  const handleConfirmBuy = async () => {
-    if (!selected) return;
-    const token = localStorage.getItem('authToken');
-    const user = localStorage.getItem('user');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    
-    let parsedUser = null;
-    try {
-      parsedUser = user ? JSON.parse(user) : null;
-    } catch (err) {
-      console.error('Failed to parse user', err);
-    }
-
-    // Helper function to submit purchase with retry logic
-    const submitPurchase = () => fetch('/api/purchases/create/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Token ${token}`
-      },
-      body: JSON.stringify({
-        product_name: selected.item,
-        product_id: selected.id,
-        game: selected.game || 'General',
-        type: 'event',
-        coins: selected.costCoins || null,
-        quantity: 1,
-        unit: 'promo',
-        price: selected.price || null,
-        user_id_input: parsedUser?.username || '',
-        payment_method: selected.costCoins ? 'coins' : 'paypal',
-        notes: `Event: ${selected.item} from ${selected.game}`
-      })
-    });
-
-    try {
-      setShowConfirm(false);
-      let res;
-      try {
-        res = await submitPurchase();
-      } catch (networkErr) {
-        // On network timeout, retry once after 3.5 seconds
-        console.warn('Purchase request timed out, retrying...', networkErr);
-        await new Promise(resolve => setTimeout(resolve, 3500));
-        res = await submitPurchase();
-      }
-
-      const data = await res.json();
-      if (!res.ok) {
-        console.error('Purchase API error:', data);
-        throw new Error(data?.error || JSON.stringify(data) || 'Failed to save purchase');
-      }
-
-      // save to inventory
-      const inv = JSON.parse(localStorage.getItem('inventory') || '[]');
-      inv.unshift({
-        id: data.transaction_id || data.id,
-        name: data.product_name,
-        game: data.game,
-        type: data.type || 'event',
-        price: data.price,
-        coins: data.coins,
-        status: data.status,
-        date: data.created_at
-      });
-      localStorage.setItem('inventory', JSON.stringify(inv));
-      
-      // deduct coins if purchase uses coins
-      if (selected.costCoins) {
-        const bal = Number(localStorage.getItem('coinBalance') || 0);
-        localStorage.setItem('coinBalance', String(Math.max(0, bal - selected.costCoins)));
-      }
-      window.dispatchEvent(new Event('storage'));
-      setResult({ title: 'Purchase Successful', body: `${selected.item} added to your inventory.` });
-    } catch (err) {
-      console.error('Purchase error:', err);
-      const errMsg = err.message || 'Failed to complete purchase';
-      const displayMsg = errMsg.includes('timeout') || errMsg.includes('Failed to fetch')
-        ? 'Purchase processing timed out. Please wait 30-60 seconds and check your inventory, or try again.'
-        : errMsg;
-      setResult({ title: 'Error', body: displayMsg });
-    }
-  };
+  const handleCheckoutClose = () => {
+    setShowCheckout(false)
+    setSelectedEvent(null)
+  }
   return (
     <Container>
       <div className="d-flex justify-content-between align-items-center py-3">
@@ -270,7 +189,7 @@ function EventsScreen() {
                     </div>
                   </div>
                   <div className="d-flex gap-2">
-                    <Button variant="primary" size="sm" onClick={() => openConfirm(ev)}>Buy</Button>
+                    <Button variant="primary" size="sm" onClick={() => openCheckout(ev)}>Buy</Button>
                   </div>
                 </div>
               </Card.Body>
@@ -279,35 +198,12 @@ function EventsScreen() {
         ))}
       </Row>
 
-      <Modal show={showConfirm} onHide={() => setShowConfirm(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Purchase</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selected && (
-            <div>
-              <h5 className="mb-1">{selected.item}</h5>
-              <div className="small text-muted mb-2">{selected.game}</div>
-              <div className="mb-2">{selected.bonus}</div>
-              <div className="fw-bold">{selected.price ? `$${selected.price.toFixed(2)}` : `${selected.costCoins.toLocaleString()} coins`}</div>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirm(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleConfirmBuy}>Confirm Buy</Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={!!result} onHide={() => setResult(null)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{result?.title}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{result?.body}</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setResult(null)}>Close</Button>
-        </Modal.Footer>
-      </Modal>
+      <CheckoutModal 
+        show={showCheckout} 
+        onHide={handleCheckoutClose}
+        saleItem={selectedEvent}
+        userId=""
+      />
     </Container>
   )
 }
