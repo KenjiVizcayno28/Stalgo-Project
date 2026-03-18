@@ -21,7 +21,7 @@ function ProfileScreen() {
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/api/profile/', {
+        const res = await axios.get('/api/profile/', {
           headers: { Authorization: `Token ${token}` }
         })
         setProfile(res.data)
@@ -53,7 +53,7 @@ function ProfileScreen() {
     try {
       const token = localStorage.getItem('authToken')
       if (token) {
-        await axios.post('http://localhost:8000/api/logout/', {}, { headers: { Authorization: `Token ${token}` } })
+        await axios.post('/api/logout/', {}, { headers: { Authorization: `Token ${token}` } })
       }
     } catch (e) {
       console.warn('Logout error:', e.response || e)
@@ -107,7 +107,7 @@ function ProfileScreen() {
                     const token = localStorage.getItem('authToken')
                     const fd = new FormData()
                     fd.append('profile_picture', file)
-                    const res = await axios.put('http://localhost:8000/api/profile/update/', fd, {
+                    const res = await axios.put('/api/profile/update/', fd, {
                       headers: { Authorization: `Token ${token}`, 'Content-Type': 'multipart/form-data' }
                     })
                     const newProfile = res.data.data
@@ -130,6 +130,12 @@ function ProfileScreen() {
                 <div className="mt-2">
                   <Button variant="danger" size="sm" onClick={handleLogout}>Logout</Button>
                 </div>
+                {uploading && (
+                  <div className="mt-2 text-muted small d-flex align-items-center gap-2">
+                    <Spinner animation="border" size="sm" />
+                    Uploading profile picture...
+                  </div>
+                )}
                 {/* Upload now happens by clicking the avatar; status shown via alerts */}
               </Col>
             </Row>
