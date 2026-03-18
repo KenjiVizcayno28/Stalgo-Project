@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Navbar, Nav, NavDropdown, Container, Image, Button, Badge, Form, FormControl, ListGroup } from 'react-bootstrap'
+import { Navbar, Nav, NavDropdown, Container, Image, Button, Form, FormControl, ListGroup } from 'react-bootstrap'
 import { Link, useNavigate } from 'react-router-dom'
 import products from '../products'
 import axios from 'axios'
@@ -69,7 +69,7 @@ function Header() {
     try {
       const token = localStorage.getItem('authToken')
       if (token) {
-        await axios.post('http://localhost:8000/api/logout/', {}, {
+        await axios.post('/api/logout/', {}, {
           headers: {
             Authorization: `Token ${token}`
           }
@@ -99,7 +99,7 @@ function Header() {
     setIsLlmLoading(true);
     setShowDropdown(false);
     try {
-      const response = await axios.post('http://localhost:8000/api/llm-search/', { query: search });
+      const response = await axios.post('/api/llm-search/', { query: search });
       const ids = response.data.ids || [];
       // Navigate to home with search results
       navigate(`/?search=${encodeURIComponent(search)}&ids=${ids.join(',')}`);
@@ -111,7 +111,7 @@ function Header() {
   };
 
   return (
-    <Navbar expand="lg" bg="primary" variant="dark" collapseOnSelect>
+    <Navbar expand="lg" variant="dark" collapseOnSelect className="store-navbar">
       <Container>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {/* Profile drawer removed - left placeholder for spacing */}
@@ -123,23 +123,22 @@ function Header() {
             style={{ height: '72px', width: 'auto' }}
             className='d-inline-block me-2'
           />
-          <span>TheLootStop</span>
+          <span className='store-brand-text'>TheLootStop</span>
         </Navbar.Brand>
         {/* LLM BEING IMPLEMENTED, TESTING */}
-        <div ref={searchRef} style={{ minWidth: 220, marginRight: 16, position: 'relative' }}>
+        <div ref={searchRef} className='store-search-wrap'>
           <Form className="d-flex" onSubmit={handleSearchSubmit} autoComplete="off">
             <FormControl
               type="search"
               placeholder="Search products..."
-              className="me-2"
+              className="me-2 store-search-input"
               value={search}
               onChange={e => setSearch(e.target.value)}
               onFocus={() => setShowDropdown(searchResults.length > 0)}
-              style={{ minWidth: 180 }}
             />
           </Form>
           {(showDropdown || isLlmLoading) && (
-            <ListGroup style={{ position: 'absolute', zIndex: 1000, width: '100%', maxHeight: 250, overflowY: 'auto' }}>
+            <ListGroup className='store-search-results'>
               {isLlmLoading && (
                 <ListGroup.Item disabled>🔍 Searching with AI...</ListGroup.Item>
               )}
@@ -162,10 +161,10 @@ function Header() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
-            <Nav.Link as={Link} to="/"><i className="fas fa-home"></i> Home</Nav.Link>
-            <Nav.Link as={Link} to="/inventory"><i className='fas fa-boxes'></i> Inventory</Nav.Link>
-            <Nav.Link as={Link} to="/events"><i className='fas fa-bolt'></i> Sales</Nav.Link>
-            <NavDropdown title={<><i className='fas fa-life-ring'></i> Support</>} id="support-dropdown">
+            <Nav.Link as={Link} to="/"><i className="fas fa-home me-1 store-nav-icon"></i> Home</Nav.Link>
+            <Nav.Link as={Link} to="/inventory"><i className='fas fa-boxes me-1 store-nav-icon'></i> Inventory</Nav.Link>
+            <Nav.Link as={Link} to="/events"><i className='fas fa-bolt me-1 store-nav-icon'></i> Sales</Nav.Link>
+            <NavDropdown title={<><i className='fas fa-life-ring me-1 store-nav-icon'></i> Support</>} id="support-dropdown">
               <NavDropdown.Item onClick={(e) => { e.preventDefault(); openOnly('help') }}>Help Center</NavDropdown.Item>
               <NavDropdown.Item onClick={(e) => { e.preventDefault(); openOnly('faq') }}>FAQ</NavDropdown.Item>
               <NavDropdown.Item onClick={(e) => { e.preventDefault(); openOnly('contact') }}>Contact Support</NavDropdown.Item>
@@ -197,12 +196,12 @@ function Header() {
             ) : (
               <>
                 <Nav.Link as={Link} to="/login">
-                  <Button variant="outline-light" size="sm" className="me-2">
+                  <Button variant="outline-light" size="sm" className="me-2 store-login-btn">
                     <i className="fas fa-sign-in-alt me-1"></i>Login
                   </Button>
                 </Nav.Link>
                 <Nav.Link as={Link} to="/signup">
-                  <Button variant="success" size="sm">
+                  <Button variant="success" size="sm" className='store-signup-btn'>
                     <i className="fas fa-user-plus me-1"></i>Sign Up
                   </Button>
                 </Nav.Link>

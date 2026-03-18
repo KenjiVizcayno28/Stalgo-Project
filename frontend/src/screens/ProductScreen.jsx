@@ -1,12 +1,12 @@
 import React, {useEffect, useState, useMemo} from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Col, ListGroup, Row, Image, Card, Button, Form } from 'react-bootstrap';
-// Rating removed per request
+import { Col, ListGroup, Row, Image, Card, Button} from 'react-bootstrap';
+
 import CheckoutModal from '../components/CheckoutModal';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-// Define packages outside component to avoid recalculation
+
 const PACKAGES_BY_UNIT = {
     diamonds: [
         { amount: 10, price: 1.99 },
@@ -86,7 +86,6 @@ function ProductScreen() {
     const {id} = useParams()
     const navigate = useNavigate()
     const [product, setProduct] = useState({})
-    const [quantity, setQuantity] = useState(1)
     const [showCheckout, setShowCheckout] = useState(false)
     const [userId, setUserId] = useState('')
     const [chosenProduct, setChosenProduct] = useState(null)
@@ -104,7 +103,7 @@ function ProductScreen() {
     useEffect(() => {
         async function fetchProduct() {
             try {
-                const {data} = await axios.get(`http://localhost:8000/api/products/${id}/`)
+          const {data} = await axios.get(`/api/products/${id}/`)
                 setProduct(data)
             } catch (err) {
                 console.error('Error fetching product:', err)

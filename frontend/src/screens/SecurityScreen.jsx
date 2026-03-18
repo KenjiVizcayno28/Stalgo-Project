@@ -30,7 +30,7 @@ const SecurityScreen = () => {
   const fetchSecurityInfo = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:8000/api/profile/', {
+      const response = await axios.get('/api/profile/', {
         headers: {
           Authorization: `Token ${token}`
         }
@@ -51,7 +51,7 @@ const SecurityScreen = () => {
   const handleEnable2FA = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:8000/api/2fa/enable/', {
+      const response = await axios.get('/api/2fa/enable/', {
         headers: {
           Authorization: `Token ${token}`
         }
@@ -90,8 +90,8 @@ const SecurityScreen = () => {
     try {
       const token = localStorage.getItem('authToken');
       
-      const response = await axios.post(
-        'http://localhost:8000/api/2fa/disable/',
+      await axios.post(
+        '/api/2fa/disable/',
         { otp_token: disableOtp },
         {
           headers: {

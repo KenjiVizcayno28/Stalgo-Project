@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 // Rating removed per request
 import { Card, Button } from 'react-bootstrap'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import CheckoutModal from './CheckoutModal'
 import axios from 'axios'
 
@@ -13,7 +13,7 @@ function Product({product}) {
     const token = localStorage.getItem('authToken')
     if (token) {
       try {
-        await axios.post('http://localhost:8000/api/track-click/', {
+        await axios.post('/api/track-click/', {
           product_id: product._id,
           product_name: product.name
         }, {
@@ -32,15 +32,15 @@ function Product({product}) {
 
   return (
     <>
-      <Card className='product-card my-3 p-3 rounded shadow-xl' bg='primary' border='light'>
-              <div onClick={handleProductClick} style={{cursor: 'pointer'}}>
-                  <Card.Img src={product.image} variant='top' className='rounded-5' />
+      <Card className='product-card my-3 shadow-xl'>
+              <div className='product-image-wrap' onClick={handleProductClick} style={{cursor: 'pointer'}}>
+                  <Card.Img src={product.image} variant='top' className='product-image' />
               </div>
 
               <Card.Body>
                   <div onClick={handleProductClick} style={{cursor: 'pointer'}}>
                       <Card.Title as='div'>
-                          <h6><strong>{product.name}</strong></h6>
+                          <h6 className='product-title'>{product.name}</h6>
                       </Card.Title>
                   </div>
                   <Card.Text as='div'>
@@ -49,7 +49,7 @@ function Product({product}) {
                   </Card.Text>
                   <Button 
                     variant={product.countInStock > 0 ? 'success' : 'secondary'} 
-                    className='w-100 mt-2'
+                    className='w-100 mt-2 product-buy-btn'
                     onClick={handleProductClick}
                     disabled={product.countInStock === 0}
                   >
