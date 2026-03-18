@@ -5,6 +5,7 @@ import { Col, ListGroup, Row, Image, Card, Button} from 'react-bootstrap';
 import CheckoutModal from '../components/CheckoutModal';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { resolveProductImage, resolveUnitDesignImage } from '../utils/imageUtils';
 
 
 const PACKAGES_BY_UNIT = {
@@ -89,6 +90,8 @@ function ProductScreen() {
     const [showCheckout, setShowCheckout] = useState(false)
     const [userId, setUserId] = useState('')
     const [chosenProduct, setChosenProduct] = useState(null)
+    const resolvedProductImage = resolveProductImage(product)
+    const resolvedUnitDesignImage = resolveUnitDesignImage(product)
 
     // Memoized package retrieval
     const { currentUnit, currentPackages, design } = useMemo(() => {
@@ -130,7 +133,7 @@ function ProductScreen() {
                 <Card className='shadow-lg' style={{ border: 'none', borderRadius: '15px', overflow: 'hidden' }}>
                     <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '20px' }}>
                         <Image 
-                            src={product.image} 
+                          src={resolvedProductImage || '/images/thelootstoplogo.png'} 
                             alt={product.name} 
                             fluid 
                             className='d-block mx-auto rounded-3' 
@@ -257,9 +260,9 @@ function ProductScreen() {
                                   maxWidth: '120px'
                                 }}
                               >
-                                {design.image ? (
+                                {(resolvedUnitDesignImage || design.image) ? (
                                   <img 
-                                    src={design.image} 
+                                    src={resolvedUnitDesignImage || design.image} 
                                     alt={currentUnit}
                                     style={{ width: '50px', height: '50px', objectFit: 'contain', marginBottom: '8px' }}
                                   />
@@ -284,9 +287,9 @@ function ProductScreen() {
                         <div style={{ padding: '15px', backgroundColor: `${design.color}15`, borderRadius: '8px', border: `2px solid ${design.color}` }}>
                           <h6 style={{ color: design.color, marginBottom: '10px' }}>📦 Selected:</h6>
                           <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            {design.image ? (
+                            {(resolvedUnitDesignImage || design.image) ? (
                               <img 
-                                src={design.image} 
+                                src={resolvedUnitDesignImage || design.image} 
                                 alt={currentUnit}
                                 style={{ width: '35px', height: '35px', objectFit: 'contain' }}
                               />
@@ -316,9 +319,9 @@ function ProductScreen() {
                                 <h5 style={{ color: design.color, marginBottom: '15px', fontWeight: 'bold', fontSize: '20px' }}>📦 Selected Package:</h5>
                                 <div style={{ padding: '20px', backgroundColor: `${design.color}25`, borderRadius: '12px', border: `3px solid ${design.color}`, marginBottom: '15px', boxShadow: `0 4px 8px ${design.color}40` }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
-                                    {design.image ? (
+                                    {(resolvedUnitDesignImage || design.image) ? (
                                       <img 
-                                        src={design.image} 
+                                        src={resolvedUnitDesignImage || design.image} 
                                         alt={currentUnit}
                                         style={{ width: '50px', height: '50px', objectFit: 'contain' }}
                                       />

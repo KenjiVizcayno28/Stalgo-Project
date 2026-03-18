@@ -1,13 +1,19 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 // Rating removed per request
 import { Card, Button } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
 import CheckoutModal from './CheckoutModal'
 import axios from 'axios'
+import { getPublicImageFallback, resolveProductImage } from '../utils/imageUtils'
 
 function Product({product}) {
   const [showCheckout, setShowCheckout] = useState(false)
+  const [imageSrc, setImageSrc] = useState(resolveProductImage(product))
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setImageSrc(resolveProductImage(product))
+  }, [product])
 
   const trackProductClick = async () => {
     const token = localStorage.getItem('authToken')
@@ -34,7 +40,21 @@ function Product({product}) {
     <>
       <Card className='product-card my-3 shadow-xl'>
               <div className='product-image-wrap' onClick={handleProductClick} style={{cursor: 'pointer'}}>
-                  <Card.Img src={product.image} variant='top' className='product-image' />
+                  <Card.Img
+                    src={imageSrc || '/images/thelootstoplogo.png'}
+                    variant='top'
+                    className='product-image'
+                    onError={(event) => {
+                      const fallback = getPublicImageFallback(imageSrc)
+                      if (fallback && event.currentTarget.src !== fallback) {
+                        setImageSrc(fallback)
+                        return
+                      }
+                      if (event.currentTarget.src !== '/images/thelootstoplogo.png') {
+                        setImageSrc('/images/thelootstoplogo.png')
+                      }
+                    }}
+                  />
               </div>
 
               <Card.Body>

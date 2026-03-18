@@ -7,6 +7,10 @@
     {
       "source": "/media/(.*)",
       "destination": "https://final-project-backend-nork.onrender.com/media/$1"
+    },
+    {
+      "source": "/static/images/(.*)",
+      "destination": "https://final-project-backend-nork.onrender.com/static/images/$1"
     }
   ]
 }
