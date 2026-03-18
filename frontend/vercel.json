@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://final-project-backend-nork.onrender.com"
+    },
+    {
+      "source": "/media/(.*)",
+      "destination": "https://final-project-backend-nork.onrender.com"
+    }
+  ]
+}
