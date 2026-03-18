@@ -15,6 +15,7 @@ import {
   Table,
 } from 'react-bootstrap'
 import axios from 'axios'
+import { getPublicImageFallback, resolveProductImage, resolveUnitDesignImage } from '../utils/imageUtils'
 
 const emptyProductForm = {
   name: '',
@@ -41,6 +42,9 @@ function AdminDashboard() {
   const [editingProductId, setEditingProductId] = useState(null)
   const [savingProduct, setSavingProduct] = useState(false)
   const [productAlert, setProductAlert] = useState(null)
+
+  const [brokenProductImages, setBrokenProductImages] = useState({})
+  const [brokenUnitImages, setBrokenUnitImages] = useState({})
 
   const token = localStorage.getItem('authToken')
   const storedUser = localStorage.getItem('user')
@@ -536,8 +540,20 @@ function AdminDashboard() {
                         products.map((product) => (
                           <tr key={product._id}>
                             <td>
-                              {product.image ? (
-                                <Image src={product.image} alt={product.name} rounded style={{ width: 56, height: 56, objectFit: 'cover' }} />
+                                {resolveProductImage(product) ? (
+                                  <Image
+                                    src={
+                                      brokenProductImages[product._id]
+                                        ? (getPublicImageFallback(resolveProductImage(product)) || '/images/thelootstoplogo.png')
+                                        : resolveProductImage(product)
+                                    }
+                                    alt={product.name}
+                                    rounded
+                                    style={{ width: 56, height: 56, objectFit: 'cover' }}
+                                    onError={() => {
+                                      setBrokenProductImages((current) => ({ ...current, [product._id]: true }))
+                                    }}
+                                  />
                               ) : (
                                 '-'
                               )}
@@ -551,12 +567,19 @@ function AdminDashboard() {
                             <td>
                               <div>{product.unit}</div>
                               <div className="small text-muted d-flex align-items-center gap-2">
-                                {product.unitDesign?.image && (
+                                {resolveUnitDesignImage(product) && (
                                   <Image
-                                    src={product.unitDesign.image}
+                                    src={
+                                      brokenUnitImages[product._id]
+                                        ? (getPublicImageFallback(resolveUnitDesignImage(product)) || '/images/thelootstoplogo.png')
+                                        : resolveUnitDesignImage(product)
+                                    }
                                     alt={product.unit}
                                     roundedCircle
                                     style={{ width: 20, height: 20, objectFit: 'cover' }}
+                                    onError={() => {
+                                      setBrokenUnitImages((current) => ({ ...current, [product._id]: true }))
+                                    }}
                                   />
                                 )}
                                 {product.unitDesign?.emoji || ''}

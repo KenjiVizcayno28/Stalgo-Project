@@ -113,6 +113,7 @@ const events = [
 function EventsScreen() {
   const [showCheckout, setShowCheckout] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [brokenLogos, setBrokenLogos] = useState({})
   const navigate = useNavigate()
 
   const openCheckout = (ev) => {
@@ -129,6 +130,39 @@ function EventsScreen() {
     setShowCheckout(false)
     setSelectedEvent(null)
   }
+
+  const renderEventLogo = (ev) => {
+    const isBroken = brokenLogos[ev.id]
+    if (ev.logo && !isBroken) {
+      return (
+        <img
+          src={`/images/${ev.logo}`}
+          alt={`${ev.game} logo`}
+          style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, marginRight: 12 }}
+          onError={() => setBrokenLogos((current) => ({ ...current, [ev.id]: true }))}
+        />
+      )
+    }
+
+    return (
+      <div style={{
+        width: 64,
+        height: 64,
+        borderRadius: 12,
+        background: ev.color,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontWeight: 700,
+        fontSize: 18,
+        marginRight: 12
+      }}>
+        {ev.initials}
+      </div>
+    )
+  }
+
   return (
     <Container>
       <div className="d-flex justify-content-between align-items-center py-3">
@@ -144,29 +178,7 @@ function EventsScreen() {
             <Card className="h-100 shadow-sm">
               <Card.Body className="d-flex flex-column">
                 <div className="d-flex align-items-start mb-3">
-                  {ev.logo ? (
-                    <img
-                      src={`/images/${ev.logo}`}
-                      alt={`${ev.game} logo`}
-                      style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, marginRight: 12 }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 12,
-                      background: ev.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: 18,
-                      marginRight: 12
-                    }}>
-                      {ev.initials}
-                    </div>
-                  )}
+                  {renderEventLogo(ev)}
                   <div className="flex-grow-1">
                     <div className="d-flex align-items-center justify-content-between">
                       <h5 className="mb-1">{ev.game}</h5>
