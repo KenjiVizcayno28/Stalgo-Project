@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://final-project-backend-nork.onrender.com"
+      "destination": "https://final-project-backend-nork.onrender.com/api/$1"
     },
     {
       "source": "/media/(.*)",
-      "destination": "https://final-project-backend-nork.onrender.com"
+      "destination": "https://final-project-backend-nork.onrender.com/media/$1"
     }
   ]
 }
