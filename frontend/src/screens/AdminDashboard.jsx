@@ -16,8 +16,6 @@ import {
 } from 'react-bootstrap'
 import axios from 'axios'
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
-
 const emptyProductForm = {
   name: '',
   description: '',
@@ -87,9 +85,9 @@ function AdminDashboard() {
     try {
       const config = { headers: { Authorization: `Token ${token}` } }
       const [statsRes, purchasesRes, productsRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/admin/stats/`, config),
-        axios.get(`${API_BASE_URL}/api/admin/purchases/`, config),
-        axios.get(`${API_BASE_URL}/api/admin/products/`, config),
+        axios.get('/api/admin/stats/', config),
+        axios.get('/api/admin/purchases/', config),
+        axios.get('/api/admin/products/', config),
       ])
 
       setStats(statsRes.data)
@@ -192,9 +190,9 @@ function AdminDashboard() {
       const config = { headers: { Authorization: `Token ${token}` } }
 
       if (editingProductId) {
-        await axios.put(`${API_BASE_URL}/api/admin/products/${editingProductId}/update/`, payload, config)
+        await axios.put(`/api/admin/products/${editingProductId}/update/`, payload, config)
       } else {
-        await axios.post(`${API_BASE_URL}/api/admin/products/create/`, payload, config)
+        await axios.post('/api/admin/products/create/', payload, config)
       }
 
       setProductAlert({
@@ -220,7 +218,7 @@ function AdminDashboard() {
 
     try {
       const config = { headers: { Authorization: `Token ${token}` } }
-      await axios.patch(`${API_BASE_URL}/api/admin/products/${product._id}/update/`, formData, config)
+      await axios.patch(`/api/admin/products/${product._id}/update/`, formData, config)
       setProductAlert({
         type: 'success',
         message: `${product.name} is now ${product.countInStock > 0 ? 'out of stock' : 'back in stock'}.`,

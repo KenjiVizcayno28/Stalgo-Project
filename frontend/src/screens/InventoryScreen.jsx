@@ -62,7 +62,7 @@ function InventoryScreen() {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) return;
-    fetch('http://127.0.0.1:8000/api/purchases/', {
+    fetch('/api/purchases/', {
       method: 'GET',
       headers: {
         'Authorization': `Token ${token}`

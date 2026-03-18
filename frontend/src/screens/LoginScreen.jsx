@@ -50,7 +50,7 @@ const LoginScreen = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/login/', {
+      const response = await axios.post('/api/login/', {
         username: formData.username,
         password: formData.password,
       });

@@ -2,9 +2,9 @@
   {
     "id": "g2",
     "title": "Payment Steps",
-    "summary": "What to expect when paying via card or local providers.",
+    "summary": "What to expect when paying through PayPal.",
     "slug": "payment-steps",
-    "content": "## Payment Steps\n\nHere’s what to expect when making a payment:\n\n- Pick your preferred payment method (cards, e-wallets, or supported local providers).\n- Enter the required payment details for the chosen method.\n- Review the transaction summary and confirm the amount before submitting.\n- Authorize the payment (you may be prompted for an OTP or other confirmation).\n- Wait for the confirmation message — the transaction is complete when you see success.\n- Your top-up will be credited automatically after successful payment.\n\n**Security:** All payments are processed using secure, industry-standard methods to protect your financial information. If you have concerns, contact Support with your order details."
+    "content": "## Payment Steps\n\nHere’s what to expect when making a payment:\n\n- Select your package or sale item and open checkout.\n- Review your order summary and total amount.\n- Click the PayPal button and approve the payment in the PayPal flow.\n- Wait for the confirmation message after payment capture.\n- Your order is recorded automatically and appears in Transaction History.\n\n**Security:** PayPal handles payment authorization using secure, industry-standard protection. If you have concerns, contact Support with your transaction ID and order details."
   },
   {
     "id": "g3",

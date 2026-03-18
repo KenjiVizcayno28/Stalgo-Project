@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
+from payment import urls as payment_urls
 
 urlpatterns = [
     path('', views.getRoutes, name='routes'),
@@ -30,4 +31,5 @@ urlpatterns = [
     # AI Recommendations
     path('recommendations/', views.get_recommendations, name='recommendations'),
     path('track-click/', views.track_product_click, name='track-click'),
+    path('payment/', include(payment_urls)),
 ]

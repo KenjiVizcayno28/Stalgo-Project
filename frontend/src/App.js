@@ -20,9 +20,9 @@ function App() {
   return (
     <Router>
       <Header />
-      <main className='py-3'>
+      <main className='py-3 storefront-main'>
 
-        <Container>
+        <Container className='store-shell'>
           <Routes>
             <Route path='/' element={<HomeScreen />} exact />
             <Route path='/product/:id' element={<ProductScreen />} />

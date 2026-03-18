@@ -51,11 +51,26 @@ const SecurityScreen = () => {
   const handleEnable2FA = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('/api/2fa/enable/', {
+      
+      const makeRequest = () => axios.get('/api/2fa/enable/', {
         headers: {
           Authorization: `Token ${token}`
         }
       });
+
+      let response;
+      try {
+        response = await makeRequest();
+      } catch (networkErr) {
+        // On network timeout, retry once after 3.5 seconds
+        if (!networkErr.response) {
+          console.warn('2FA request timed out, retrying...', networkErr);
+          await new Promise(resolve => setTimeout(resolve, 3500));
+          response = await makeRequest();
+        } else {
+          throw networkErr;
+        }
+      }
       
       // Check if we got a QR code (new setup) or just the URI (re-enabling)
       if (response.data.qr_code) {
@@ -67,9 +82,10 @@ const SecurityScreen = () => {
       }
     } catch (error) {
       console.error('Error enabling 2FA:', error);
+      const errMsg = error.response?.data?.error || error.message || 'Failed to start 2FA setup. Please try again.';
       setAlert({
         type: 'danger',
-        message: 'Failed to start 2FA setup. Please try again.'
+        message: errMsg
       });
     }
   };

@@ -26,12 +26,18 @@ GROQ_MODEL = config('GROQ_MODEL', default='llama-3.3-70b-versatile')
 SECRET_KEY = 'django-insecure-9bbzozei@-bx!p)%z3g8d4ea4&!qz-rl6*s_f5^rn-gsm#)g1c'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 #Can be changed to the actual domain when deployed
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,*.pythonanywhere.com',
+    default='localhost,127.0.0.1,.onrender.com',
+    cast=Csv(),
+)
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='http://localhost:3000,http://127.0.0.1:3000,https://*.vercel.app,https://*.onrender.com',
     cast=Csv(),
 )
 
@@ -157,14 +163,19 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'https://*.pythonanywhere.com',
-    'https://*.vercel.app',
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.vercel\.app$',
+    r'^https://.*\.onrender\.com$',
 ]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Media files (user-uploaded)
 MEDIA_URL = '/media/'

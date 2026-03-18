@@ -41,7 +41,11 @@ class UserProfile(models.Model):
     
     def generate_2fa_secret(self):
         """Generate a new TOTP secret for Google Authenticator"""
-        self.two_fa_secret = pyotp.random_base_32()
+        try:
+            # pyotp.random_base32() returns a random secret string
+            self.two_fa_secret = pyotp.random_base32()
+        except Exception as e:
+            raise ValueError(f'Failed to generate 2FA secret: {str(e)}')
         return self.two_fa_secret
     
     def get_2fa_uri(self):

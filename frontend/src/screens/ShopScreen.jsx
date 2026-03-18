@@ -40,7 +40,7 @@ function ShopScreen() {
       return;
     }
     const purchase = { type: 'coin', product_name: pkg.name, coins: pkg.coins, price: pkg.price, game: pkg.game || 'General' };
-    fetch('http://127.0.0.1:8000/api/purchases/create/', {
+    fetch('/api/purchases/create/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ function ShopScreen() {
       quantity: 1,
       cost_coins: item.costCoins
     };
-    fetch('http://127.0.0.1:8000/api/purchases/create/', {
+    fetch('/api/purchases/create/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

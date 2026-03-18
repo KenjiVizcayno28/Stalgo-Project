@@ -12,7 +12,7 @@
   {
     "id": "f3",
     "question": "Which payment methods are supported?",
-    "answer": "We support credit/debit cards and selected regional providers. Payment options appear during checkout depending on your region."
+    "answer": "All checkouts use PayPal for secure payment processing. You will be redirected to the PayPal flow inside checkout and returned automatically after approval."
   },
   {
     "id": "f4",

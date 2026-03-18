@@ -1,26 +1,308 @@
-main{
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --store-bg: #0d0a0f;
+  --store-bg-soft: #141218;
+  --store-nav: #1a151f;
+  --store-surface: #1f1a28;
+  --store-surface-hover: #2a2235;
+  --store-text: #e0dce8;
+  --store-muted: #8b8695;
+  --store-accent: #7c5dfa;
+  --store-border: #2a2235;
+  --store-cyan: #00d4ff;
+  --store-cyan-dark: #00a3cc;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(135deg, #0d0a0f 0%, #141218 50%, #1a1520 100%);
+  color: var(--store-text);
+}
+
+main {
   min-height: 80vh;
 }
 
-h3{
-  padding: 1rem;
+h3 {
+  padding: 1rem 0;
 }
 
-.rating span{
+.storefront-main {
+  padding-top: 1.1rem !important;
+}
+
+.store-shell {
+  max-width: 1140px;
+}
+
+.rating span {
   margin: 0.1rem;
 }
 
-:root{
-  --primary-color: #0d6efd; /* default Bootstrap primary - change as needed */
+.store-navbar {
+  background: linear-gradient(90deg, #1a151f, #1f1a28);
+  border-bottom: 1px solid rgba(124, 93, 250, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Product card uses the site's primary color */
-.product-card{
-  background-color: var(--primary-color);
-  color: #fff;
-  border: none;
+.store-navbar .navbar-brand,
+.store-navbar .nav-link,
+.store-navbar .dropdown-toggle {
+  color: var(--store-text) !important;
 }
-.product-card a{color:inherit;text-decoration:none}
-.product-card .card-img-top{background:transparent}
-.product-card .card-body{background:transparent}
-.product-card .card-title strong{color:inherit}
+
+.store-brand-text {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.store-nav-icon {
+  opacity: 0.82;
+}
+
+.store-navbar .dropdown-menu {
+  background: #1f1a28;
+  border: 1px solid var(--store-border);
+}
+
+.store-navbar .dropdown-item {
+  color: var(--store-text);
+}
+
+.store-navbar .dropdown-item:hover {
+  background-color: rgba(124, 93, 250, 0.12);
+  color: var(--store-cyan);
+}
+
+.store-search-wrap {
+  min-width: 240px;
+  margin-right: 16px;
+  position: relative;
+}
+
+.store-search-input {
+  min-width: 220px;
+  border-radius: 999px;
+  border: 1px solid #3a3446;
+  background: rgba(31, 26, 40, 0.95);
+  color: var(--store-text);
+}
+
+.store-search-input::placeholder {
+  color: #8b8695;
+}
+
+.store-search-input:focus {
+  background: rgba(31, 26, 40, 1);
+  color: var(--store-text);
+  border-color: var(--store-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+}
+
+.store-search-results {
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #764293;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.store-search-results .list-group-item {
+  background: #351044;
+  color: #f3e8ff;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.store-search-results .list-group-item:hover {
+  background: #4a1d5c;
+}
+
+.store-login-btn {
+  border-radius: 999px;
+  border-color: #cbb5db;
+  color: #f1e9f8;
+}
+
+.store-login-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.store-signup-btn {
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(90deg, #577dff, #5f56d8);
+}
+
+.store-signup-btn:hover {
+  filter: brightness(1.08);
+}
+
+.store-hero-banner {
+  background:
+    linear-gradient(116deg, rgba(241, 210, 84, 0.97) 0 40%, rgba(61, 30, 77, 0.88) 40%),
+    linear-gradient(145deg, #2b0f36, #451653);
+  border-radius: 16px;
+  padding: 22px 26px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.store-hero-copy {
+  max-width: 580px;
+  color: var(--store-text);
+}
+
+.store-hero-kicker {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.1rem;
+  font-weight: 700;
+}
+
+.store-hero-copy h2 {
+  margin: 6px 0 8px;
+  font-size: 1.72rem;
+  color: var(--store-cyan);
+}
+
+.store-hero-copy p {
+  margin: 0;
+  color: var(--store-text);
+}
+
+.store-hero-media {
+  margin-top: 10px;
+}
+
+.store-hero-media img {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 12px 24px rgba(22, 3, 29, 0.26);
+}
+
+.store-hero-dots {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.store-hero-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(56, 16, 73, 0.38);
+}
+
+.store-hero-dots span:first-child {
+  background: #351343;
+}
+
+.store-section {
+  margin-bottom: 8px;
+}
+
+.store-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  margin: 10px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--store-cyan);
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+}
+
+.product-card {
+  background: linear-gradient(180deg, #1f1a28, #2a2235);
+  color: var(--store-text);
+  border-radius: 12px;
+  border: 1px solid rgba(124, 93, 250, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 34px rgba(14, 0, 19, 0.35);
+}
+
+.product-image-wrap {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: #2c0938;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card .card-body {
+  padding: 0.85rem 0.95rem 1rem;
+}
+
+.product-title {
+  font-weight: 600;
+}
+
+.product-card h6 {
+  line-height: 1.35;
+  min-height: 2.5rem;
+}
+
+.product-card .my-2 {
+  color: #ffd457;
+}
+
+.product-buy-btn {
+  border: 0;
+  border-radius: 9px;
+  background: #19a45a;
+  font-weight: 700;
+}
+
+.product-buy-btn.btn-secondary {
+  background: #676178;
+}
+
+footer {
+  background: rgba(32, 5, 40, 0.86);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 991px) {
+  .store-search-wrap {
+    min-width: 100%;
+    margin: 10px 0;
+  }
+
+  .store-search-input {
+    min-width: 100%;
+  }
+
+  .store-section-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .store-hero-banner {
+    padding: 18px;
+    border-radius: 12px;
+    background:
+      linear-gradient(140deg, rgba(242, 255, 82, 0.94) 0 56%, rgba(67, 33, 85, 0.78) 56%),
+      linear-gradient(145deg, #2b0f36, #451653);
+  }
+
+  .store-hero-copy h2 {
+    font-size: 1.3rem;
+  }
+}

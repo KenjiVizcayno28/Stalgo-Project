@@ -1,7 +1,6 @@
-import google.generativeai as genai
+import requests
 from django.conf import settings
 from .models import Purchase, ProductClick
-from django.contrib.auth.models import User
 import json
 
 
@@ -16,8 +15,8 @@ def get_ai_recommendations(user, all_products, limit=4):
         List of recommended product IDs
     """
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        if not settings.GROQ_API_KEY:
+            raise ValueError('GROQ_API_KEY is not configured')
         
         purchases = Purchase.objects.filter(user=user, status='completed').order_by('-created_at')[:10]
         clicked_products = ProductClick.objects.filter(user=user).order_by('-timestamp')[:15]
@@ -69,7 +68,8 @@ Based on the weighted scoring system and user's behavior, recommend exactly {lim
 
 IMPORTANT: 
 - Prioritize products related to those with high scores (purchases are most important)
-- Only recommend products from the Available Products list above
+- Only recommend products from the Available Products list below
+- Recommend products that are related to the types/categories of products the user has interacted with (e.g., Mobile Legends is related to League of Legends, Valorant is related to FPS games)
 - Return ONLY a JSON array of product IDs, nothing else
 - Format: ["id1", "id2", "id3", "id4"]
 - If user has no history, recommend popular gaming items
@@ -77,8 +77,28 @@ IMPORTANT:
 
 Your response (JSON array only):"""
 
-        response = model.generate_content(prompt)
-        response_text = response.text.strip()
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {settings.GROQ_API_KEY}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'model': settings.GROQ_MODEL,
+                'messages': [
+                    {
+                        'role': 'system',
+                        'content': 'You are a recommendation engine. Return only a JSON array of product IDs.',
+                    },
+                    {'role': 'user', 'content': prompt},
+                ],
+                'temperature': 0.2,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        response_text = payload.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
         
         if '```' in response_text:
             response_text = response_text.split('```')[1]

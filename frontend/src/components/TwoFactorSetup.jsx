@@ -17,17 +17,34 @@ const TwoFactorSetup = ({ show, onHide, onSuccess }) => {
     setError(null);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://localhost:8000/api/2fa/enable/', {
+      
+      const makeRequest = () => axios.get('/api/2fa/enable/', {
         headers: {
           Authorization: `Token ${token}`
         }
       });
+
+      let response;
+      try {
+        response = await makeRequest();
+      } catch (networkErr) {
+        // On network timeout, retry once after 3.5 seconds
+        if (!networkErr.response) {
+          console.warn('2FA request timed out, retrying...', networkErr);
+          await new Promise(resolve => setTimeout(resolve, 3500));
+          response = await makeRequest();
+        } else {
+          throw networkErr;
+        }
+      }
       
       setQrCode(response.data.qr_code);
       setSecret(response.data.secret);
       setStep(2);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to generate QR code');
+      const errMsg = err.response?.data?.error || err.message || 'Failed to generate QR code';
+      setError(errMsg);
+      console.error('2FA enable error:', err);
     } finally {
       setLoading(false);
     }
@@ -44,7 +61,7 @@ const TwoFactorSetup = ({ show, onHide, onSuccess }) => {
     try {
       const token = localStorage.getItem('authToken');
       await axios.post(
-        'http://localhost:8000/api/2fa/confirm/',
+        '/api/2fa/confirm/',
         { otp_token: otp },
         {
           headers: {

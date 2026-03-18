@@ -1,28 +1,30 @@
 services:
   - type: web
     name: final-project-backend
-    runtime: python
+    env: python
+    plan: free
     rootDir: backend
-    buildCommand: pip install -r ../requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate --noinput
-    startCommand: gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r ../requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.8
+        value: 3.12.7
       - key: DEBUG
-        value: false
+        value: "False"
       - key: ALLOWED_HOSTS
-        value: .onrender.com
+        value: localhost,127.0.0.1,.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com,https://*.vercel.app
       - key: CORS_ALLOW_ALL_ORIGINS
-        value: false
+        value: "False"
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: DB_CONN_MAX_AGE
+        value: "60"
+      - key: DB_CONN_HEALTH_CHECKS
+        value: "True"
+      - key: DB_CONNECT_TIMEOUT
+        value: "5"
 
-  - type: web
-    name: final-project-frontend
-    runtime: node
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npx serve -s build -l $PORT
-    envVars:
-      - key: NODE_VERSION
-        value: 20.18.0
-      - key: REACT_APP_API_BASE_URL
-        value: https://your-backend-domain.onrender.com
+# Add these in Render dashboard as secret env vars:
+# GROQ_API_KEY, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, SECRET_KEY

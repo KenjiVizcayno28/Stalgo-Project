@@ -16,7 +16,7 @@ import pyotp
 import qrcode
 import io
 import base64
-import google.generativeai as genai
+import requests
 from django.conf import settings
 
 def _get_catalog_queryset():
@@ -226,30 +226,45 @@ def enable_2fa(request):
     If a secret already exists (from previous setup), use it.
     Otherwise, generate a new one.
     """
-    profile = request.user.profile
-    
-    # If secret already exists (e.g., re-enabling after disable), use it
-    if not profile.two_fa_secret:
-        profile.generate_2fa_secret()
-        profile.save()
-    
-    uri = profile.get_2fa_uri()
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(uri)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffer = io.BytesIO()
-    img.save(buffer, format='PNG')
-    buffer.seek(0)
-    img_str = base64.b64encode(buffer.getvalue()).decode()
-    
-    return Response({
-        'message': '2FA setup initiated',
-        'secret': profile.two_fa_secret,
-        'qr_code': f'data:image/png;base64,{img_str}',
-        'uri': uri
-    }, status=status.HTTP_200_OK)
+    try:
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+        # If secret already exists (e.g., re-enabling after disable), use it
+        if not profile.two_fa_secret:
+            profile.generate_2fa_secret()
+            profile.save()
+
+        uri = profile.get_2fa_uri()
+
+        # Graceful fallback: if QR rendering fails, still return secret + URI
+        # so users can manually add the key in authenticator apps.
+        img_data_url = None
+        qr_error = None
+        try:
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(uri)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            img_str = base64.b64encode(buffer.getvalue()).decode()
+            img_data_url = f'data:image/png;base64,{img_str}'
+        except Exception as qr_exception:
+            qr_error = f'QR generation failed: {str(qr_exception)}'
+
+        return Response({
+            'message': '2FA setup initiated',
+            'secret': profile.two_fa_secret,
+            'qr_code': img_data_url,
+            'uri': uri,
+            'qr_error': qr_error,
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'error': f'Failed to start 2FA setup: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -352,7 +367,7 @@ def confirm_2fa(request):
             'error': 'otp_token is required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    profile = request.user.profile
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
     # Convert to string and strip whitespace
     otp_token = str(otp_token).strip()
     
@@ -383,7 +398,7 @@ def disable_2fa(request):
     Note: We keep the secret stored so user can re-enable without scanning QR code again
     """
     try:
-        profile = request.user.profile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
         otp_token = request.data.get('otp_token')
         
         # If 2FA is enabled, require OTP verification to disable it
@@ -431,14 +446,9 @@ def get_user_profile(request):
     """
     Get current user profile
     """
-    try:
-        profile = request.user.profile
-        serializer = UserProfileSerializer(profile, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except UserProfile.DoesNotExist:
-        return Response({
-            'error': 'Profile not found'
-        }, status=status.HTTP_404_NOT_FOUND)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    serializer = UserProfileSerializer(profile, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -447,38 +457,33 @@ def update_user_profile(request):
     """
     Update user profile
     """
-    try:
-        profile = request.user.profile
-        user = request.user
-        
-        # Update user fields
-        if 'first_name' in request.data:
-            user.first_name = request.data['first_name']
-        if 'last_name' in request.data:
-            user.last_name = request.data['last_name']
-        if 'email' in request.data:
-            user.email = request.data['email']
-        user.save()
-        
-        # Update profile fields
-        if 'bio' in request.data:
-            profile.bio = request.data['bio']
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    user = request.user
 
-        # Accept profile picture upload
-        if 'profile_picture' in request.FILES:
-            profile.profile_picture = request.FILES['profile_picture']
+    # Update user fields
+    if 'first_name' in request.data:
+        user.first_name = request.data['first_name']
+    if 'last_name' in request.data:
+        user.last_name = request.data['last_name']
+    if 'email' in request.data:
+        user.email = request.data['email']
+    user.save()
 
-        profile.save()
-        
-        serializer = UserProfileSerializer(profile, context={'request': request})
-        return Response({
-            'message': 'Profile updated successfully',
-            'data': serializer.data
-        }, status=status.HTTP_200_OK)
-    except UserProfile.DoesNotExist:
-        return Response({
-            'error': 'Profile not found'
-        }, status=status.HTTP_404_NOT_FOUND)
+    # Update profile fields
+    if 'bio' in request.data:
+        profile.bio = request.data['bio']
+
+    # Accept profile picture upload
+    if 'profile_picture' in request.FILES:
+        profile.profile_picture = request.FILES['profile_picture']
+
+    profile.save()
+
+    serializer = UserProfileSerializer(profile, context={'request': request})
+    return Response({
+        'message': 'Profile updated successfully',
+        'data': serializer.data
+    }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -486,7 +491,7 @@ def test_2fa_code(request):
     """
     DEBUG: Get current OTP code for testing (remove in production)
     """
-    profile = request.user.profile
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
     if not profile.two_fa_secret:
         return Response({
             'error': 'No 2FA secret configured'
@@ -546,10 +551,31 @@ def llm_search(request):
     )
     
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        response = model.generate_content(prompt)
-        text = response.text.strip()
+        if not settings.GROQ_API_KEY:
+            return Response({'ids': [], 'error': 'GROQ_API_KEY is not configured'}, status=500)
+
+        response = requests.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            headers={
+                'Authorization': f'Bearer {settings.GROQ_API_KEY}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'model': settings.GROQ_MODEL,
+                'messages': [
+                    {
+                        'role': 'system',
+                        'content': 'You are a search assistant. Return only a JSON array of product IDs.',
+                    },
+                    {'role': 'user', 'content': prompt},
+                ],
+                'temperature': 0.1,
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        text = payload.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
         if text.startswith("```"):
             text = text.split("```")[1]
             if text.startswith("json"):

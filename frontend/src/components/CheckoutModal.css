@@ -1,39 +1,39 @@
 /* Checkout Modal Styling */
 
 .checkout-modal .modal-content {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 15px;
-  color: white;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(170deg, #f7fbff 0%, #edf4fb 100%);
+  border: 1px solid #d5e2f0;
+  border-radius: 14px;
+  color: #1f2b3d;
+  box-shadow: 0 18px 42px rgba(19, 47, 76, 0.18);
 }
 
 .checkout-modal .modal-header {
-  border: none;
-  padding: 25px;
+  border-bottom: 1px solid #d9e6f2;
+  padding: 20px 24px;
   background: transparent;
 }
 
 .checkout-modal .modal-header .btn-close {
-  filter: brightness(0) invert(1);
+  filter: none;
 }
 
 .checkout-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  color: white;
-  letter-spacing: -0.5px;
+  color: #21364d;
+  letter-spacing: -0.2px;
 }
 
 .checkout-body {
-  padding: 20px 25px;
+  padding: 18px 24px;
   background: transparent;
 }
 
 .product-description {
-  color: #1dd1a1;
-  font-size: 15px;
-  margin-bottom: 20px;
+  color: #35526f;
+  font-size: 14px;
+  margin-bottom: 16px;
   line-height: 1.5;
   font-weight: 500;
 }
@@ -50,15 +50,15 @@
 }
 
 .price-label {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: #3b556f;
 }
 
 .price-value {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: white;
+  color: #1d3047;
 }
 
 .quantity-section {
@@ -71,27 +71,28 @@
 .quantity-label {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: #35526f;
   margin: 0;
 }
 
 .quantity-input {
   width: 70px;
-  padding: 8px 12px;
-  border: none;
+  padding: 7px 10px;
+  border: 1px solid #c2d4e6;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.2);
-  color: white;
+  background: #ffffff;
+  color: #1f2b3d;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   text-align: center;
   transition: all 0.3s ease;
 }
 
 .quantity-input:focus {
   outline: none;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  background: #ffffff;
+  border-color: #7da2c8;
+  box-shadow: 0 0 0 3px rgba(113, 152, 191, 0.2);
 }
 
 .quantity-input::placeholder {
@@ -104,25 +105,25 @@
   align-items: center;
   padding: 15px 0;
   margin-bottom: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid #d3e2ef;
+  border-bottom: 1px solid #d3e2ef;
 }
 
 .total-label {
   font-size: 16px;
   font-weight: 700;
-  color: white;
+  color: #1d3047;
 }
 
 .total-value {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: white;
+  color: #124f86;
 }
 
 .checkout-footer {
-  border: none;
-  padding: 20px 25px;
+  border-top: 1px solid #d9e6f2;
+  padding: 16px 24px;
   background: transparent;
   display: flex;
   gap: 12px;
@@ -130,59 +131,97 @@
 }
 
 .cancel-btn {
-  background: rgba(0, 0, 0, 0.2);
-  border: none;
-  color: white;
+  background: #dce8f4;
+  border: 1px solid #c3d5e6;
+  color: #2d435a;
   font-weight: 600;
-  padding: 10px 25px;
+  padding: 9px 22px;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .cancel-btn:hover {
-  background: rgba(0, 0, 0, 0.3);
-  color: white;
+  background: #cfdeed;
+  color: #25394f;
 }
 
 .purchase-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: 2px solid white;
+  background: linear-gradient(120deg, #2f76c0 0%, #4d9ce0 100%);
+  border: 1px solid #2c6eaf;
   color: white;
   font-weight: 700;
-  padding: 10px 30px;
+  padding: 9px 22px;
   border-radius: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(23, 80, 133, 0.28);
 }
 
 .purchase-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(23, 80, 133, 0.3);
   color: white;
-  border-color: white;
+  border-color: #2c6eaf;
 }
 
 .login-btn {
-  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
-  border: none;
+  background: linear-gradient(120deg, #0f6ab7 0%, #2f8ed3 100%);
+  border: 1px solid #1c73bc;
   color: white;
   font-weight: 700;
-  padding: 10px 30px;
+  padding: 9px 22px;
   border-radius: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+  box-shadow: 0 4px 12px rgba(17, 91, 153, 0.28);
 }
 
 .login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(17, 91, 153, 0.3);
   color: white;
-  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+  background: linear-gradient(120deg, #0f6ab7 0%, #2f8ed3 100%);
 }
 
 .login-btn:focus {
   color: white;
   outline: none;
+}
+
+.checkout-alert {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.checkout-error {
+  background: #fdeaea;
+  border: 1px solid #efc6c6;
+  color: #8d2c2c;
+}
+
+.checkout-status {
+  background: #ebf4fd;
+  border: 1px solid #c7dff6;
+  color: #1f4f7e;
+}
+
+.paypal-area {
+  margin-top: 10px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #d8e5f2;
+  border-radius: 10px;
+}
+
+.paypal-badge {
+  font-size: 12px;
+  color: #3a556f;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.paypal-button-container {
+  min-height: 44px;
 }
 
 /* Mobile Responsive */
@@ -198,7 +237,7 @@
   }
 
   .checkout-title {
-    font-size: 22px;
+    font-size: 19px;
   }
 
   .product-description {
@@ -213,7 +252,7 @@
 
   .price-value,
   .total-value {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .quantity-input {

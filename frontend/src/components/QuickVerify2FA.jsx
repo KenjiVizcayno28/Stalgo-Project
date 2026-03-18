@@ -20,7 +20,7 @@ const QuickVerify2FA = ({ show, onHide, onSuccess, onError }) => {
     try {
       const token = localStorage.getItem('authToken');
       await axios.post(
-        'http://localhost:8000/api/2fa/confirm/',
+        '/api/2fa/confirm/',
         { otp_token: otp },
         {
           headers: {

@@ -124,60 +124,91 @@ function EventsScreen() {
     setSelected(ev); setShowConfirm(true); setResult(null)
   }
 
-  const handleConfirmBuy = () => {
+  const handleConfirmBuy = async () => {
     if (!selected) return;
     const token = localStorage.getItem('authToken');
+    const user = localStorage.getItem('user');
     if (!token) {
       navigate('/login');
       return;
     }
-    // prepare purchase object for backend
-    const purchase = {
-      product_name: selected.item,
-      game: selected.game || 'General',
-      type: 'event',
-      price: selected.price || null,
-      coins: selected.costCoins || null,
-      status: 'Completed',
-      quantity: 1
-    };
-    fetch('http://127.0.0.1:8000/api/purchases/create/', {
+    
+    let parsedUser = null;
+    try {
+      parsedUser = user ? JSON.parse(user) : null;
+    } catch (err) {
+      console.error('Failed to parse user', err);
+    }
+
+    // Helper function to submit purchase with retry logic
+    const submitPurchase = () => fetch('/api/purchases/create/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Token ${token}`
       },
-      body: JSON.stringify(purchase)
-    })
-      .then(async res => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(JSON.stringify(data));
-        // save to inventory
-        const inv = JSON.parse(localStorage.getItem('inventory') || '[]');
-        inv.unshift({
-          id: data.transaction_id || data.id,
-          name: data.product_name,
-          game: data.game,
-          type: data.type,
-          price: data.price,
-          coins: data.coins,
-          status: data.status,
-          date: data.created_at
-        });
-        localStorage.setItem('inventory', JSON.stringify(inv));
-        // deduct coins if purchase uses coins
-        if (selected.costCoins) {
-          const bal = Number(localStorage.getItem('coinBalance') || 0);
-          localStorage.setItem('coinBalance', String(Math.max(0, bal - selected.costCoins)));
-        }
-        window.dispatchEvent(new Event('storage'));
-        setShowConfirm(false);
-        setResult({ title: 'Purchase Successful', body: `${selected.item} added to your inventory.` });
+      body: JSON.stringify({
+        product_name: selected.item,
+        product_id: selected.id,
+        game: selected.game || 'General',
+        type: 'event',
+        coins: selected.costCoins || null,
+        quantity: 1,
+        unit: 'promo',
+        price: selected.price || null,
+        user_id_input: parsedUser?.username || '',
+        payment_method: selected.costCoins ? 'coins' : 'paypal',
+        notes: `Event: ${selected.item} from ${selected.game}`
       })
-      .catch(err => {
-        setShowConfirm(false);
-        setResult({ title: 'Error', body: 'Failed to complete purchase.' });
+    });
+
+    try {
+      setShowConfirm(false);
+      let res;
+      try {
+        res = await submitPurchase();
+      } catch (networkErr) {
+        // On network timeout, retry once after 3.5 seconds
+        console.warn('Purchase request timed out, retrying...', networkErr);
+        await new Promise(resolve => setTimeout(resolve, 3500));
+        res = await submitPurchase();
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Purchase API error:', data);
+        throw new Error(data?.error || JSON.stringify(data) || 'Failed to save purchase');
+      }
+
+      // save to inventory
+      const inv = JSON.parse(localStorage.getItem('inventory') || '[]');
+      inv.unshift({
+        id: data.transaction_id || data.id,
+        name: data.product_name,
+        game: data.game,
+        type: data.type || 'event',
+        price: data.price,
+        coins: data.coins,
+        status: data.status,
+        date: data.created_at
       });
+      localStorage.setItem('inventory', JSON.stringify(inv));
+      
+      // deduct coins if purchase uses coins
+      if (selected.costCoins) {
+        const bal = Number(localStorage.getItem('coinBalance') || 0);
+        localStorage.setItem('coinBalance', String(Math.max(0, bal - selected.costCoins)));
+      }
+      window.dispatchEvent(new Event('storage'));
+      setResult({ title: 'Purchase Successful', body: `${selected.item} added to your inventory.` });
+    } catch (err) {
+      console.error('Purchase error:', err);
+      const errMsg = err.message || 'Failed to complete purchase';
+      const displayMsg = errMsg.includes('timeout') || errMsg.includes('Failed to fetch')
+        ? 'Purchase processing timed out. Please wait 30-60 seconds and check your inventory, or try again.'
+        : errMsg;
+      setResult({ title: 'Error', body: displayMsg });
+    }
   };
   return (
     <Container>
